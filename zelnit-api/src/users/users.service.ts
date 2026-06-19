@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -61,27 +62,39 @@ export class UsersService {
                 'Usuario no encontrado',
             );
         }
-        return this.prisma.user.update({
-            where: {
-                id: userId,
-            },
-            data: {
-                username: dto.username,
-                avatarUrl: dto.avatarUrl,
-                countryCode: dto.countryCode,
-                language: dto.language,
-            },
-            select: {
-                id: true,
-                username: true,
-                email: true,
-                avatarUrl: true,
-                countryCode: true,
-                language: true,
-                level: true,
-                experience: true,
-                trustScore: true,
-            },
-        });
+        try {
+            return this.prisma.user.update({
+                where: {
+                    id: userId,
+                },
+                data: {
+                    username: dto.username,
+                    avatarUrl: dto.avatarUrl,
+                    countryCode: dto.countryCode,
+                    language: dto.language,
+                },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    avatarUrl: true,
+                    countryCode: true,
+                    language: true,
+                    level: true,
+                    experience: true,
+                    trustScore: true,
+                },
+            });
+        } catch (error) {
+            if (
+                error instanceof Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2002'
+            ) {
+                throw new ConflictException(
+                    'El nombre de usuario ya está en uso',
+                );
+            }
+            throw error;
+        }
     }
 }
