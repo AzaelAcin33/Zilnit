@@ -1,5 +1,6 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -15,6 +16,19 @@ export class UsersController {
     @UseGuards(JwtGuard)
     @Get('me')
     me(@Req() req: any) {
-        return req.user;
+        return this.usersService.findById(
+            req.user.userId,
+        );
+    }
+    @UseGuards(JwtGuard)
+    @Patch('me')
+    updateProfile(
+        @Req() req: any,
+        @Body() dto: UpdateProfileDto,
+    ) {
+        return this.usersService.updateProfile(
+            req.user.userId,
+            dto,
+        );
     }
 }
